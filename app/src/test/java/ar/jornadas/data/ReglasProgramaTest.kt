@@ -9,6 +9,35 @@ class ReglasProgramaTest {
     private fun charla(id: String, titulo: String = "t$id", favorita: Boolean = false) =
         Charla(id, titulo, "Android", 1, "09:00", "Auditorio", "Ponente", "Resumen", favorita)
 
+    private fun charlaDe(id: String, tema: String, dia: Int) =
+        Charla(id, "t$id", tema, dia, "09:00", "Auditorio", "Ponente", "Resumen")
+
+    private val catalogo = listOf(
+        charlaDe("13", "Android", 2),
+        charlaDe("23", "Datos", 2),
+        charlaDe("24", "Datos", 2),
+        charlaDe("21", "Datos", 1),
+        charlaDe("31", "Calidad", 1)
+    )
+
+    @Test
+    fun `dia 2 y tema Datos dejan dos resultados`() {
+        val ids = ReglasPrograma.filtrar(catalogo, dia = 2, tema = "Datos").map { it.id }
+        assertEquals(listOf("23", "24"), ids)
+    }
+
+    @Test
+    fun `ambos dias y todos los temas no filtran nada`() {
+        val resultado = ReglasPrograma.filtrar(catalogo, ReglasPrograma.AMBOS_DIAS, ReglasPrograma.TEMA_TODOS)
+        assertEquals(catalogo, resultado)
+    }
+
+    @Test
+    fun `solo tema filtra en ambos dias`() {
+        val ids = ReglasPrograma.filtrar(catalogo, ReglasPrograma.AMBOS_DIAS, "Datos").map { it.id }
+        assertEquals(listOf("23", "24", "21"), ids)
+    }
+
     @Test
     fun `conserva la marca de una charla vigente aunque cambie el titulo`() {
         val nuevas = listOf(charla("11", titulo = "Compose en produccion avanzada"), charla("12"))
