@@ -14,11 +14,7 @@ class MainActivity : ComponentActivity() {
             model.mesa.disponible = intent.getBooleanExtra("servicio_disponible", true)
             intent.removeExtra("servicio_disponible")
         }
+        model.cargarAlAbrir()
         setContent { Portada(model) }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        model.recargar()
     }
 }
