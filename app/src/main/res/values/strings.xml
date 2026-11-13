@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aviso_datos_guardados">Sin conexión: se muestran los datos guardados.</string>
+    <string name="aviso_sin_programa">No se pudo consultar el programa.</string>
+    <string name="programa_vacio">Sin charlas programadas</string>
+    <string name="reintentar">Reintentar</string>
+</resources>

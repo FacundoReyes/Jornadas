@@ -39,6 +39,31 @@ class ReglasProgramaTest {
     }
 
     @Test
+    fun `una falla con edicion previa usa los datos guardados`() {
+        assertEquals(EstadoPrograma.UsandoGuardados, ReglasPrograma.estadoTrasFalla(hayEdicion = true))
+    }
+
+    @Test
+    fun `una falla sin edicion previa ofrece reintento`() {
+        assertEquals(EstadoPrograma.SinEdicion, ReglasPrograma.estadoTrasFalla(hayEdicion = false))
+    }
+
+    @Test
+    fun `una edicion vacia valida se muestra como sin charlas programadas`() {
+        assertTrue(ReglasPrograma.programaVacio(emptyList(), hayEdicion = true))
+    }
+
+    @Test
+    fun `sin edicion previa una lista vacia no es un programa vacio`() {
+        assertFalse(ReglasPrograma.programaVacio(emptyList(), hayEdicion = false))
+    }
+
+    @Test
+    fun `con charlas el programa no esta vacio`() {
+        assertFalse(ReglasPrograma.programaVacio(listOf(charla("11")), hayEdicion = true))
+    }
+
+    @Test
     fun `conserva la marca de una charla vigente aunque cambie el titulo`() {
         val nuevas = listOf(charla("11", titulo = "Compose en produccion avanzada"), charla("12"))
         val resultado = ReglasPrograma.conservarMarcas(nuevas, setOf("11"))

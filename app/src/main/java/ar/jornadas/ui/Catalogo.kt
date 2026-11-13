@@ -9,7 +9,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import ar.jornadas.R
 import ar.jornadas.data.Charla
+import ar.jornadas.data.EstadoPrograma
 import ar.jornadas.data.ReglasPrograma
 
 @Composable
@@ -17,18 +20,27 @@ fun Catalogo(model: ProgramaModel, abrir: (String) -> Unit) {
     val dia by model.dia.collectAsStateWithLifecycle()
     val tema by model.tema.collectAsStateWithLifecycle()
     val fichas by model.charlas.collectAsStateWithLifecycle()
-    val aviso by model.aviso.collectAsStateWithLifecycle()
+    val estado by model.estado.collectAsStateWithLifecycle()
+    val hayEdicion by model.hayEdicion.collectAsStateWithLifecycle()
     val cargando by model.cargando.collectAsStateWithLifecycle()
     Selector(listOf("Ambos días", "Día 1", "Día 2"), dia) { model.elegirDia(it) }
     val temas = listOf(ReglasPrograma.TEMA_TODOS, "Android", "Datos", "Calidad")
     Selector(temas, temas.indexOf(tema)) { model.elegirTema(temas[it]) }
     TextButton(onClick = model::recargar) { Text("Actualizar") }
     if (cargando) LinearProgressIndicator(Modifier.fillMaxWidth())
-    if (aviso.isNotEmpty()) {
-        Text(aviso)
-        OutlinedButton(onClick = model::recargar) { Text("Reintentar") }
-    } else {
-        Grilla(ReglasPrograma.filtrar(fichas, dia, tema), abrir)
+    when (estado) {
+        EstadoPrograma.SinEdicion -> {
+            Text(stringResource(R.string.aviso_sin_programa))
+            OutlinedButton(onClick = model::recargar) { Text(stringResource(R.string.reintentar)) }
+        }
+        else -> {
+            if (estado == EstadoPrograma.UsandoGuardados) Text(stringResource(R.string.aviso_datos_guardados))
+            if (ReglasPrograma.programaVacio(fichas, hayEdicion)) {
+                Text(stringResource(R.string.programa_vacio))
+            } else {
+                Grilla(ReglasPrograma.filtrar(fichas, dia, tema), abrir)
+            }
+        }
     }
 }
 

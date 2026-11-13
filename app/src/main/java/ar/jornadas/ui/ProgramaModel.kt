@@ -3,10 +3,11 @@ package ar.jornadas.ui
 import android.app.Application
 import androidx.lifecycle.*
 import ar.jornadas.JornadasApp
+import ar.jornadas.data.EstadoPrograma
 import ar.jornadas.data.ReglasPrograma
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 class ProgramaModel(app: Application, private val guardado: SavedStateHandle) : AndroidViewModel(app) {
     private val servicios = getApplication<JornadasApp>().servicios
@@ -16,8 +17,17 @@ class ProgramaModel(app: Application, private val guardado: SavedStateHandle) : 
     val charlas = repo.programa.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val dia: StateFlow<Int> = guardado.getStateFlow(CLAVE_DIA, ReglasPrograma.AMBOS_DIAS)
     val tema: StateFlow<String> = guardado.getStateFlow(CLAVE_TEMA, ReglasPrograma.TEMA_TODOS)
-    val aviso = MutableStateFlow("")
-    val cargando = MutableStateFlow(false)
+
+    private val _estado = MutableStateFlow<EstadoPrograma>(EstadoPrograma.Normal)
+    val estado: StateFlow<EstadoPrograma> = _estado.asStateFlow()
+    private val _hayEdicion = MutableStateFlow(false)
+    val hayEdicion: StateFlow<Boolean> = _hayEdicion.asStateFlow()
+    private val _cargando = MutableStateFlow(false)
+    val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
+
+    init {
+        viewModelScope.launch { _hayEdicion.value = repo.hayEdicion() }
+    }
 
     fun elegirDia(valor: Int) { guardado[CLAVE_DIA] = valor }
 
@@ -33,14 +43,19 @@ class ProgramaModel(app: Application, private val guardado: SavedStateHandle) : 
 
     private fun descargar() {
         viewModelScope.launch {
-            cargando.value = true
-            aviso.value = ""
+            _cargando.value = true
             try {
                 repo.sincronizar()
-            } catch (e: IOException) {
-                aviso.value = "No se pudo consultar el programa"
+                _estado.value = EstadoPrograma.Normal
+                _hayEdicion.value = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                val hayEdicion = repo.hayEdicion()
+                _hayEdicion.value = hayEdicion
+                _estado.value = ReglasPrograma.estadoTrasFalla(hayEdicion)
             } finally {
-                cargando.value = false
+                _cargando.value = false
                 descargas.terminar()
             }
         }
